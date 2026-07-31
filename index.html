@@ -1,0 +1,702 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Job Viewer — Read Only Dashboard - SAP</title>
+<style>
+    body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #f1f5f9; margin: 0; padding: 20px; color: #1e293b; }
+    .wrap { max-width: 1500px; margin: 0 auto; }
+
+    .top-bar { display:flex; align-items:center; justify-content:space-between; gap:14px; flex-wrap:wrap; margin-bottom: 18px; }
+    .top-bar h1 { font-size: 20px; margin:0; color:#1e3a8a; display:flex; align-items:center; gap:8px; }
+    .view-only-badge { background:#eff6ff; color:#1e3a8a; border:1px solid #bfdbfe; font-size:11px; font-weight:800; text-transform:uppercase; letter-spacing:.03em; padding:4px 10px; border-radius:20px; }
+    .sync-row { display:flex; align-items:center; gap:10px; font-size:12px; color:#64748b; }
+
+    .card { background: white; padding: 18px; border-radius: 10px; box-shadow: 0 4px 10px rgba(0,0,0,0.04); border: 1px solid #e2e8f0; margin-bottom: 18px; }
+    h2 { margin-top: 0; color: #1e3a8a; border-bottom: 2px solid #f1f5f9; padding-bottom: 8px; font-size: 16px; }
+
+    /* Metrics */
+    .metrics-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 10px; margin-bottom: 18px; }
+    .metric-card { color: white; padding: 10px; border-radius: 8px; text-align: center; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
+    .metric-title { font-size: 10px; text-transform: uppercase; font-weight: 700; opacity: 0.92; }
+    .metric-value { font-size: 19px; font-weight: bold; margin-top: 3px; }
+
+    /* Charts */
+    .dashboard-panels-row { display:grid; grid-template-columns: 1fr; gap: 16px; }
+    @media (min-width: 900px) { .dashboard-panels-row { grid-template-columns: 1fr 1fr; } }
+    .chart-header { display:flex; align-items:center; justify-content:space-between; gap:10px; margin-bottom:10px; }
+    .chart-toggle-btn { border:none; background:#eef2ff; color:#4338ca; font-size:11px; font-weight:700; padding:5px 10px; border-radius:20px; cursor:pointer; white-space:nowrap; }
+    .bar-row { display:flex; align-items:center; gap:8px; margin-bottom:8px; font-size:12px; }
+    .bar-label { width:150px; flex-shrink:0; color:#475569; font-weight:600; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+    .bar-track { flex:1; background:#f1f5f9; border-radius:6px; height:16px; overflow:hidden; }
+    .bar-fill { height:100%; background:#1e3a8a; border-radius:6px; display:flex; align-items:center; justify-content:flex-end; padding-right:6px; color:white; font-size:10px; font-weight:800; min-width: 22px; box-sizing:border-box; }
+    .chart-empty { color:#94a3b8; font-size:12px; text-align:center; padding:16px 0; }
+
+    /* Controls */
+    .controls-bar { background: #fff; padding: 15px; border-radius: 8px 8px 0 0; border: 1px solid #e2e8f0; display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 10px; align-items: center; }
+    @media (max-width: 768px) { .controls-bar { grid-template-columns: 1fr; padding: 12px; } }
+    input, select { padding: 9px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 14px; background-color: #f8fafc; width: 100%; box-sizing: border-box; }
+
+    .date-filter-bar { background:#fff; border:1px solid #e2e8f0; border-top:none; padding:12px 15px; display:flex; flex-wrap:wrap; align-items:center; gap:8px; font-size:12px; color:#475569; }
+    .date-filter-bar label { font-weight:700; }
+    .date-filter-bar input[type="date"] { width:auto; }
+    .date-active-badge { display:none; background:#fef3c7; color:#92400e; font-size:11px; font-weight:700; padding:3px 8px; border-radius:20px; }
+    .btn-reset-filters { background:#f1f5f9; color:#475569; border:1px solid #cbd5e1; padding:8px 12px; border-radius:6px; cursor:pointer; font-weight:700; font-size:12px; margin-left:auto; }
+    .btn-reset-filters:hover { background:#e2e8f0; }
+    .btn-sync { background:#64748b; color:white; border:none; padding:8px 12px; border-radius:6px; cursor:pointer; width:100%; font-weight:700; }
+    .btn-sync:disabled { opacity:.7; cursor:not-allowed; }
+    .btn-spinner { display: inline-block; width: 12px; height: 12px; border: 2px solid rgba(255,255,255,0.45); border-top-color: #ffffff; border-radius: 50%; vertical-align: middle; margin-right: 6px; animation: spin .7s linear infinite; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* Table */
+    .table-responsive-wrapper { width: 100%; overflow-x: auto; background: white; border: 1px solid #e2e8f0; border-radius: 0 0 8px 8px; -webkit-overflow-scrolling: touch; }
+    .pipeline-table { width: 100%; border-collapse: collapse; min-width: 700px; font-size: 13px; }
+    .pipeline-table th { background: #f8fafc; border-bottom: 2px solid #e2e8f0; text-align: left; padding: 12px; }
+    .pipeline-table td { padding: 12px; border-bottom: 1px solid #f1f5f9; vertical-align: top; }
+    .job-row-view { cursor: pointer; transition: background-color .15s; }
+    .job-row-view:hover { background-color: #f8fafc; }
+    .result-count { font-size:12px; color:#64748b; padding:10px 4px; }
+
+    .status-tag { padding: 6px 14px; border-radius: 20px; font-size: 12px; font-weight: 800; letter-spacing: 0.4px; text-transform: uppercase; color: white; display: inline-block; white-space: nowrap; box-shadow: 0 3px 10px rgba(0,0,0,0.2); }
+    .status-Pending { background: #ea580c; }
+    .status-PendingforQuotation { background: #f59e0b; }
+    .status-Ongoing { background: #2563eb; }
+    .status-WarrantyPending { background: #6366f1; }
+    .status-Completed { background: #059669; }
+    .status-Returned { background: #b91c1c; }
+    .status-CantRepair { background: #ef476f; }
+    .status-WarrantyClaimed { background: #7c3aed; }
+    .status-CustomerHold { background: #0891b2; }
+
+    /* Detail modal (view only) */
+    .modal-overlay { display:none; position:fixed; inset:0; background:rgba(15,23,42,0.55); z-index:5000; align-items:center; justify-content:center; padding:16px; }
+    .modal-overlay.show { display:flex; }
+    .modal-box { background:white; border-radius:12px; max-width:640px; width:100%; max-height:88vh; overflow-y:auto; padding:22px; box-shadow:0 20px 50px rgba(0,0,0,0.25); }
+    .modal-box h2 { display:flex; align-items:center; justify-content:space-between; }
+    .modal-close { cursor:pointer; font-weight:900; color:#94a3b8; font-size:20px; line-height:1; }
+    .modal-close:hover { color:#1e293b; }
+    .detail-grid { display:grid; grid-template-columns: 1fr 1fr; gap: 10px 18px; margin-top: 10px; }
+    @media (max-width:520px) { .detail-grid { grid-template-columns: 1fr; } }
+    .detail-item label { display:block; font-size:10px; font-weight:800; text-transform:uppercase; color:#94a3b8; margin-bottom:2px; }
+    .detail-item div.val { font-size:14px; color:#1e293b; }
+    .detail-full { grid-column: 1 / -1; }
+    .history-section { margin-top:18px; border-top:1px solid #f1f5f9; padding-top:14px; }
+    .history-item { display:flex; gap:10px; padding:8px 0; border-bottom:1px solid #f8fafc; font-size:12px; }
+    .history-item .h-status { background:#1e3a8a; color:white; font-size:10px; font-weight:700; padding:2px 8px; border-radius:10px; white-space:nowrap; }
+    .history-empty { color:#94a3b8; font-size:12px; text-align:center; padding:10px 0; }
+    .loading-text { color:#94a3b8; font-size:13px; text-align:center; padding:30px; }
+
+    .toast-stack { position: fixed; bottom: 20px; right: 20px; z-index: 9999; display: flex; flex-direction: column-reverse; gap: 10px; max-width: 320px; }
+    .toast-item { background: #1e293b; color: white; padding: 12px 14px; border-radius: 8px; font-size: 13px; font-weight: 600; box-shadow: 0 6px 18px rgba(0,0,0,0.18); border-left: 4px solid #64748b; }
+    .toast-item.toast-error { border-left-color: #ef476f; }
+
+
+    /* ── Mobile-first tab navigation ── */
+    .app-tabs { display:grid; grid-template-columns:1fr 1fr; gap:8px; margin:0 0 16px; position:sticky; top:0; z-index:1000; background:#f1f5f9; padding:4px 0 8px; }
+    .app-tab { border:1px solid #dbe3ef; background:#fff; color:#475569; border-radius:10px; padding:11px 14px; font-size:13px; font-weight:800; cursor:pointer; transition:.18s ease; box-shadow:0 2px 7px rgba(15,23,42,.04); }
+    .app-tab.active { background:#1e3a8a; color:#fff; border-color:#1e3a8a; box-shadow:0 5px 14px rgba(30,58,138,.18); }
+    .tab-panel { display:none; }
+    .tab-panel.active { display:block; }
+    .section-caption { font-size:12px; color:#64748b; margin:-10px 0 14px; }
+    .mobile-only-note { display:none; }
+
+    /* More responsive controls */
+    .controls-bar { grid-template-columns:repeat(12, minmax(0, 1fr)); }
+    .controls-bar > input#fJobNum { grid-column:span 3; }
+    .controls-bar > div { grid-column:span 5 !important; }
+    .controls-bar > select { grid-column:span 2; }
+    .date-filter-bar { display:grid; grid-template-columns:auto minmax(120px,1fr) auto minmax(120px,1fr) auto auto minmax(120px,1fr) auto minmax(120px,1fr) auto; }
+    .date-filter-bar .btn-reset-filters { margin-left:0; }
+
+    /* Compact job queue on phones */
+    @media (max-width: 768px) {
+        body { padding:10px; }
+        .wrap { max-width:none; }
+        .top-bar { gap:10px; margin-bottom:8px; }
+        .top-bar h1 { font-size:16px; line-height:1.25; }
+        .view-only-badge { font-size:9px; padding:3px 7px; }
+        .sync-row { width:100%; justify-content:space-between; }
+        .sync-row .btn-sync { min-width:118px; }
+        .app-tabs { margin-bottom:10px; }
+        .app-tab { padding:10px 8px; font-size:12px; }
+
+        .card { padding:13px; border-radius:10px; margin-bottom:12px; }
+        h2 { font-size:14px; }
+        .metrics-grid { grid-template-columns:repeat(2, minmax(0,1fr)); gap:7px; margin-bottom:10px; }
+        .metric-card { padding:9px 7px; border-radius:8px; }
+        .metric-title { font-size:9px; line-height:1.25; min-height:23px; display:flex; align-items:center; justify-content:center; }
+        .metric-value { font-size:18px; }
+
+        .dashboard-panels-row { gap:10px; }
+        .chart-header { align-items:flex-start; }
+        .chart-toggle-btn { font-size:10px; padding:5px 8px; }
+        .bar-row { gap:6px; margin-bottom:7px; }
+        .bar-label { width:108px; font-size:10px; }
+        .bar-track { height:15px; }
+        .bar-fill { font-size:9px; }
+
+        .controls-bar { grid-template-columns:1fr 1fr; gap:8px; padding:10px; border-radius:10px 10px 0 0; }
+        .controls-bar > input#fJobNum,
+        .controls-bar > div,
+        .controls-bar > select { grid-column:span 2 !important; }
+        .controls-bar > input#fJobNum,
+        .controls-bar > div { grid-column:span 2 !important; }
+        .controls-bar select { min-height:42px; }
+        .controls-bar input { min-height:42px; }
+
+        .date-filter-bar { grid-template-columns:auto 1fr auto 1fr; gap:7px; padding:10px; font-size:11px; border-radius:0 0 10px 10px; }
+        .date-filter-bar label { white-space:nowrap; }
+        .date-filter-bar label:nth-of-type(2) { grid-column:1 / -1; margin-left:0 !important; padding-top:3px; }
+        .date-filter-bar .date-active-badge,
+        .date-filter-bar #handoverDateActiveBadge { grid-column:1 / -1; }
+        .date-filter-bar .btn-reset-filters { grid-column:1 / -1; width:100%; }
+        .date-filter-bar span[style*="font-weight:bold"] { text-align:center; }
+
+        .table-responsive-wrapper { border-radius:10px; border-top:1px solid #e2e8f0; margin-top:10px; overflow:visible; background:transparent; }
+        .pipeline-table { min-width:0; width:100%; border-collapse:separate; border-spacing:0 10px; font-size:12px; }
+        .pipeline-table thead { display:none; }
+        .pipeline-table tbody, .pipeline-table tr { display:block; width:100%; }
+        .pipeline-table tr.job-row-view { background:#fff; border:1px solid #e2e8f0; border-radius:12px; box-shadow:0 3px 10px rgba(15,23,42,.05); overflow:hidden; margin-bottom:10px; }
+        .pipeline-table tr.job-row-view:hover { background:#fff; }
+        .pipeline-table td { display:block; padding:9px 12px 9px 78px; border-bottom:1px solid #f1f5f9; min-height:18px; position:relative; box-sizing:border-box; line-height:1.35; }
+        .pipeline-table td:last-child { border-bottom:none; }
+        .pipeline-table td::before { position:absolute; left:12px; top:9px; width:58px; font-size:9px; color:#94a3b8; font-weight:800; text-transform:uppercase; letter-spacing:.03em; }
+        .pipeline-table td:nth-child(1)::before { content:'Job'; }
+        .pipeline-table td:nth-child(2)::before { content:'Workshop'; }
+        .pipeline-table td:nth-child(3)::before { content:'Technician'; }
+        .pipeline-table td:nth-child(4)::before { content:'Status'; }
+        .pipeline-table td:nth-child(1) { padding-top:11px; }
+        .pipeline-table td:nth-child(4) { padding-bottom:11px; }
+        .pipeline-table td:nth-child(4) .status-tag { max-width:100%; white-space:normal; line-height:1.2; text-align:center; padding:5px 10px; }
+        .result-count { padding:8px 2px; font-size:11px; }
+        .mobile-only-note { display:block; color:#94a3b8; font-size:10px; margin-top:6px; }
+
+        .modal-overlay { padding:8px; }
+        .modal-box { max-height:94vh; padding:15px; border-radius:12px; }
+        .detail-grid { grid-template-columns:1fr; gap:8px; }
+        .detail-full { grid-column:auto; }
+        .history-item { align-items:flex-start; }
+        .toast-stack { left:10px; right:10px; bottom:10px; max-width:none; }
+    }
+
+    @media (min-width:769px) and (max-width:1100px) {
+        .controls-bar { grid-template-columns:repeat(6, minmax(0,1fr)); }
+        .controls-bar > input#fJobNum { grid-column:span 2; }
+        .controls-bar > div { grid-column:span 4 !important; }
+        .controls-bar > select { grid-column:span 2; }
+        .date-filter-bar { grid-template-columns:auto 1fr auto 1fr auto; }
+        .date-filter-bar label:nth-of-type(2) { grid-column:1; }
+    }
+
+</style>
+</head>
+<body>
+<div class="wrap">
+
+    <div class="top-bar">
+        <h1>📋 Job Viewer Dashboard <span class="view-only-badge">View Only</span></h1>
+        <div class="sync-row">
+            <span id="lastSyncedLabel">Not synced yet</span>
+            <button id="syncBtn" class="btn-sync" style="width:auto;" onclick="fetchJobs()">🔄 Refresh</button>
+        </div>
+    </div>
+
+    <div class="app-tabs" role="tablist" aria-label="Main sections">
+        <button id="tabDashboard" class="app-tab active" type="button" onclick="switchTab('dashboard')">📊 Dashboard</button>
+        <button id="tabQueue" class="app-tab" type="button" onclick="switchTab('queue')">📋 Job Queue <span id="queueTabCount">0</span></button>
+    </div>
+
+    <section id="dashboardPanel" class="tab-panel active">
+    <!-- Dashboard metrics -->
+    <div class="metrics-grid">
+        <div class="metric-card" style="background:#1e3a8a;"><div class="metric-title">Total</div><div id="mTotal" class="metric-value">0</div></div>
+        <div class="metric-card" style="background:#ea580c;"><div class="metric-title">Pending</div><div id="mPending" class="metric-value">0</div></div>
+        <div class="metric-card" style="background:#f59e0b;"><div class="metric-title">Pending Quotation</div><div id="mPendingQuotation" class="metric-value">0</div></div>
+        <div class="metric-card" style="background:#2563eb;"><div class="metric-title">Ongoing</div><div id="mOngoing" class="metric-value">0</div></div>
+        <div class="metric-card" style="background:#6366f1;"><div class="metric-title">Warranty Pending</div><div id="mWarrantyPending" class="metric-value">0</div></div>
+        <div class="metric-card" style="background:#0891b2;"><div class="metric-title">Customer Hold</div><div id="mCustomerHold" class="metric-value">0</div></div>
+        <div class="metric-card" style="background:#059669;"><div class="metric-title">Completed</div><div id="mCompleted" class="metric-value">0</div></div>
+        <div class="metric-card" style="background:#ef476f;"><div class="metric-title">Can't Repair</div><div id="mCantRepair" class="metric-value">0</div></div>
+        <div class="metric-card" style="background:#b91c1c;"><div class="metric-title">Returned</div><div id="mReturned" class="metric-value">0</div></div>
+        <div class="metric-card" style="background:#7c3aed;"><div class="metric-title">Warranty Claimed</div><div id="mWarrantyClaimed" class="metric-value">0</div></div>
+    </div>
+
+    <!-- Charts -->
+    <div class="dashboard-panels-row">
+        <div class="card" style="margin-bottom:0;">
+            <div class="chart-header">
+                <span id="distChartTitle" style="font-weight:800; color:#1e3a8a; font-size:14px;">🏭 Jobs by Workshop</span>
+                <button type="button" class="chart-toggle-btn" onclick="toggleDistChartView()">👨‍💻 View by Technician ⇄</button>
+            </div>
+            <div id="distChartBars"></div>
+        </div>
+        <div class="card" style="margin-bottom:0;">
+            <h2 style="border:none; padding:0; font-size:14px; color:#1e3a8a; margin-bottom:10px;">⏳ Oldest Jobs Still In Queue</h2>
+            <div id="oldestJobsList"></div>
+        </div>
+    </div>
+
+    <div class="mobile-only-note">Tip: Tap any job card to open the full read-only job details.</div>
+    </section>
+
+    <section id="queuePanel" class="tab-panel">
+    <!-- Filters -->
+    <div class="controls-bar" style="margin-top:18px;">
+        <input type="text" id="fJobNum" placeholder="🔎 Search Job # (exact/partial)" oninput="renderTable()">
+        <div style="grid-column: span 2;">
+            <input type="text" id="fQuickSearch" placeholder="🔍 Search Phone, Customer, Model, Serial # or Fault..." oninput="renderTable()">
+        </div>
+        <select id="fItemType" onchange="renderTable()">
+            <option value="ALL">All Categories</option>
+            <option value="Computer">Computer</option>
+            <option value="Laptop">Laptop</option>
+            <option value="Printer">Printer</option>
+            <option value="CCTV Camera">CCTV Camera</option>
+            <option value="Other">Other</option>
+        </select>
+        <select id="fWorkshop" onchange="renderTable()">
+            <option value="ALL">All Workshops</option>
+            <option value="UNASSIGNED">🚫 Unassigned Workshop</option>
+            <option value="SAP -  Shop 14">SAP -  Shop 14</option>
+            <option value="kalagedihen prj">kalagedihen prj</option>
+            <option value="Mr. Gayan - Kadawatha">Mr. Gayan - Kadawatha</option>
+            <option value="SAP - Shop 68">SAP - Shop 68</option>
+            <option value="SAP CCTV Shop Gampaha">SAP CCTV Shop Gampaha</option>
+            <option value="Smart Technology">Smart Technology</option>
+            <option value="Ishika - Udigampola">Ishika - Udigampola</option>
+        </select>
+        <select id="fTech" onchange="renderTable()">
+            <option value="ALL">All Technicians</option>
+            <option value="UNASSIGNED">🚫 Unassigned Technician</option>
+            <option value="WM Nayanajijth">WM Nayanajijth</option>
+            <option value="Supun Samarasinghe">Supun Samarasinghe</option>
+            <option value="Isuru Lakshitha">Isuru Lakshitha</option>
+            <option value="Ayesh Harshana">Ayesh Harshana</option>
+            <option value="Dilka Dulakshana">Dilka Dulakshana</option>
+            <option value="Front Officer">Front Officer</option>
+            <option value="Chamith Sandeepa">Chamith Sandeepa</option>
+            <option value="Pradeep Kaushalya">Pradeep Kaushalya</option>
+        </select>
+        <select id="fStatus" onchange="renderTable()">
+            <option value="ALL">All Statuses</option>
+            <option value="Pending">Pending</option>
+            <option value="Pending for Quotation">Pending for Quotation</option>
+            <option value="Ongoing">Ongoing</option>
+            <option value="Warranty Pending">Warranty Pending</option>
+            <option value="Customer Hold">Customer Hold</option>
+            <option value="Completed">Completed</option>
+            <option value="Cant Repair">Cant Repair</option>
+            <option value="Returned">Returned</option>
+            <option value="Warranty Claimed">Warranty Claimed</option>
+        </select>
+        <select id="fHandoverView" onchange="renderTable()">
+            <option value="HIDE">Hide Handed Over</option>
+            <option value="SHOW">Show Handed Over Only</option>
+            <option value="ALL">Show All Combined</option>
+        </select>
+        <select id="fSortOrder" onchange="renderTable()">
+            <option value="createdDesc">Sort: Newest Created First</option>
+            <option value="createdAsc">Sort: Oldest Created First</option>
+            <option value="updatedDesc">Sort: Recently Updated First</option>
+            <option value="updatedAsc">Sort: Least Recently Updated</option>
+            <option value="jobDesc">Sort: Job # (High → Low)</option>
+            <option value="jobAsc">Sort: Job # (Low → High)</option>
+            <option value="handoverDesc">Sort: Handover Date (Newest First)</option>
+            <option value="handoverAsc">Sort: Handover Date (Oldest First)</option>
+        </select>
+    </div>
+
+    <div class="date-filter-bar">
+        <label>📅 Created:</label>
+        <input type="date" id="fDateFrom" onchange="renderTable()">
+        <span style="color:#94a3b8; font-weight:bold;">→</span>
+        <input type="date" id="fDateTo" onchange="renderTable()">
+        <span id="dateActiveBadge" class="date-active-badge">📅 Date filter active</span>
+
+        <label style="margin-left:10px;">📦 Handed Over:</label>
+        <input type="date" id="fHandoverDateFrom" onchange="renderTable()">
+        <span style="color:#94a3b8; font-weight:bold;">→</span>
+        <input type="date" id="fHandoverDateTo" onchange="renderTable()">
+        <span id="handoverDateActiveBadge" class="date-active-badge">📦 Handover date filter active</span>
+
+        <button class="btn-reset-filters" onclick="resetAllFilters()">✕ Reset Filters</button>
+    </div>
+
+    <div class="table-responsive-wrapper">
+        <table class="pipeline-table">
+            <thead><tr><th>Job Card Details</th><th>Workshop</th><th>Technician</th><th>Status</th></tr></thead>
+            <tbody id="pipelineRowsContainer">
+                <tr><td colspan="4" class="loading-text">Loading job data…</td></tr>
+            </tbody>
+        </table>
+        <div class="result-count" id="resultCount"></div>
+    </div>
+    </section>
+
+</div>
+
+<!-- Read-only job detail modal -->
+<div class="modal-overlay" id="detailModalOverlay" onclick="if(event.target===this) closeDetailModal()">
+    <div class="modal-box">
+        <h2>Job Card #<span id="dJobNum"></span><span class="modal-close" onclick="closeDetailModal()">✕</span></h2>
+        <div class="detail-grid">
+            <div class="detail-item"><label>Status</label><div class="val" id="dStatus"></div></div>
+            <div class="detail-item"><label>Created</label><div class="val" id="dCreated"></div></div>
+            <div class="detail-item"><label>Customer</label><div class="val" id="dCustomer"></div></div>
+            <div class="detail-item"><label>Mobile</label><div class="val" id="dMobile"></div></div>
+            <div class="detail-item"><label>Category</label><div class="val" id="dItemType"></div></div>
+            <div class="detail-item"><label>Model / Brand</label><div class="val" id="dModel"></div></div>
+            <div class="detail-item"><label>Serial Number</label><div class="val" id="dSerial"></div></div>
+            <div class="detail-item"><label>Workshop</label><div class="val" id="dWorkshop"></div></div>
+            <div class="detail-item"><label>Technician</label><div class="val" id="dTech"></div></div>
+            <div class="detail-item"><label>Updated</label><div class="val" id="dUpdated"></div></div>
+            <div class="detail-item"><label>Estimate Price</label><div class="val" id="dEstimate"></div></div>
+            <div class="detail-item"><label>Final Total Price</label><div class="val" id="dTotal"></div></div>
+            <div class="detail-item detail-full"><label>Fault Description</label><div class="val" id="dFault"></div></div>
+            <div class="detail-item detail-full"><label>Handover Status</label><div class="val" id="dHandover"></div></div>
+        </div>
+        <div class="history-section">
+            <h2 style="border:none; padding:0; font-size:14px; margin-bottom:6px;">🔍 Activity History</h2>
+            <div id="dHistory"><div class="history-empty">Loading…</div></div>
+        </div>
+    </div>
+</div>
+
+<div class="toast-stack" id="toastStack"></div>
+
+<script>
+    // ── Backend endpoint (read-only GET calls only — this page never writes data) ──
+    const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbytDEJQNBfn1shoA5Ig5y8I1Vc4WzjuY6C451Pdte-MGZj93CcpAjUwyI050ss6cbs1/exec";
+
+    let jobsCacheArray = [];
+    let currentFilteredJobs = [];
+    let distChartShowingTech = false;
+
+    function showToast(message, type = 'info') {
+        const stack = document.getElementById('toastStack');
+        const el = document.createElement('div');
+        el.className = `toast-item toast-${type}`;
+        el.innerText = message;
+        stack.appendChild(el);
+        setTimeout(() => el.remove(), 4200);
+    }
+
+    // ── Date parsing helpers (handles ISO + Apps Script friendly formats) ──
+    function parseAnyDate(raw) {
+        if (!raw) return null;
+        if (raw instanceof Date) return isNaN(raw.getTime()) ? null : raw;
+        const str = raw.toString().trim();
+        if (!str) return null;
+        let d = new Date(str);
+        if (!isNaN(d.getTime())) return d;
+        const m = str.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4}),?\s+(\d{1,2}):(\d{2}):(\d{2})\s*(AM|PM)?$/i);
+        if (m) {
+            const mo = parseInt(m[1], 10), da = parseInt(m[2], 10), yr = parseInt(m[3], 10);
+            let hh = parseInt(m[4], 10);
+            const mi = parseInt(m[5], 10), ss = parseInt(m[6], 10), ap = m[7] ? m[7].toUpperCase() : null;
+            if (ap === 'PM' && hh !== 12) hh += 12;
+            if (ap === 'AM' && hh === 12) hh = 0;
+            d = new Date(yr, mo - 1, da, hh, mi, ss);
+            if (!isNaN(d.getTime())) return d;
+        }
+        const m2 = str.match(/^(\d{4})-(\d{1,2})-(\d{1,2})\s+(\d{1,2}):(\d{2})(?::(\d{2}))?\s*(AM|PM)?$/i);
+        if (m2) {
+            const yr = parseInt(m2[1], 10), mo = parseInt(m2[2], 10), da = parseInt(m2[3], 10);
+            let hh = parseInt(m2[4], 10);
+            const mi = parseInt(m2[5], 10);
+            const ss2 = m2[6] ? parseInt(m2[6], 10) : 0;
+            const ap = m2[7] ? m2[7].toUpperCase() : null;
+            if (ap === 'PM' && hh !== 12) hh += 12;
+            if (ap === 'AM' && hh === 12) hh = 0;
+            d = new Date(yr, mo - 1, da, hh, mi, ss2);
+            if (!isNaN(d.getTime())) return d;
+        }
+        return null;
+    }
+    function formatFriendlyDate(raw) {
+        const d = parseAnyDate(raw);
+        if (!d) return raw ? raw.toString() : '';
+        return d.toLocaleString('en-GB', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit', hour12: true });
+    }
+
+    function switchTab(tab) {
+        const isDashboard = tab === 'dashboard';
+        document.getElementById('dashboardPanel').classList.toggle('active', isDashboard);
+        document.getElementById('queuePanel').classList.toggle('active', !isDashboard);
+        document.getElementById('tabDashboard').classList.toggle('active', isDashboard);
+        document.getElementById('tabQueue').classList.toggle('active', !isDashboard);
+        document.getElementById('tabDashboard').setAttribute('aria-selected', isDashboard ? 'true' : 'false');
+        document.getElementById('tabQueue').setAttribute('aria-selected', isDashboard ? 'false' : 'true');
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    // ── Fetch pipeline data (GET only — no writes possible from this page) ──
+    function fetchJobs() {
+        const btn = document.getElementById('syncBtn');
+        const originalHtml = btn.innerHTML;
+        btn.disabled = true;
+        btn.innerHTML = '<span class="btn-spinner"></span>Refreshing...';
+
+        fetch(`${WEB_APP_URL}?action=getAdminPipeline`).then(res => res.json()).then(data => {
+            if (data.success) {
+                jobsCacheArray = data.jobs || [];
+                renderTable();
+                const now = new Date();
+                document.getElementById('lastSyncedLabel').innerText = 'Last synced ' + now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+            } else {
+                showToast('Failed to load jobs: ' + (data.error || 'Unknown error.'), 'error');
+            }
+        }).catch(() => {
+            showToast('Network error while loading job data.', 'error');
+        }).finally(() => {
+            btn.disabled = false;
+            btn.innerHTML = originalHtml;
+        });
+    }
+
+    function calculateCounters(jobs) {
+        const stats = { total: 0, Pending: 0, PendingforQuotation: 0, Ongoing: 0, WarrantyPending: 0, CustomerHold: 0, Completed: 0, CantRepair: 0, Returned: 0, WarrantyClaimed: 0 };
+        jobs.forEach(job => {
+            stats.total++;
+            const key = job.status.replace(/\s+/g, '');
+            if (stats[key] !== undefined) stats[key]++;
+        });
+        document.getElementById('mTotal').innerText = stats.total;
+        document.getElementById('mPending').innerText = stats.Pending;
+        document.getElementById('mPendingQuotation').innerText = stats.PendingforQuotation;
+        document.getElementById('mOngoing').innerText = stats.Ongoing;
+        document.getElementById('mWarrantyPending').innerText = stats.WarrantyPending;
+        document.getElementById('mCustomerHold').innerText = stats.CustomerHold;
+        document.getElementById('mCompleted').innerText = stats.Completed;
+        document.getElementById('mCantRepair').innerText = stats.CantRepair;
+        document.getElementById('mReturned').innerText = stats.Returned;
+        document.getElementById('mWarrantyClaimed').innerText = stats.WarrantyClaimed;
+    }
+
+    function renderDistChart(jobs) {
+        const container = document.getElementById('distChartBars');
+        const counts = {};
+        jobs.forEach(job => {
+            const key = distChartShowingTech ? (job.tech && job.tech.trim() ? job.tech : 'Unassigned') : (job.workshop && job.workshop.trim() ? job.workshop : 'Unassigned');
+            counts[key] = (counts[key] || 0) + 1;
+        });
+        const entries = Object.entries(counts).sort((a, b) => b[1] - a[1]);
+        if (entries.length === 0) { container.innerHTML = '<div class="chart-empty">No data for current filters.</div>'; return; }
+        const max = Math.max(...entries.map(e => e[1]));
+        container.innerHTML = entries.map(([label, count]) => {
+            const pct = Math.max(6, Math.round((count / max) * 100));
+            return `<div class="bar-row"><div class="bar-label" title="${label}">${label}</div><div class="bar-track"><div class="bar-fill" style="width:${pct}%;">${count}</div></div></div>`;
+        }).join('');
+    }
+
+    function toggleDistChartView() {
+        distChartShowingTech = !distChartShowingTech;
+        document.getElementById('distChartTitle').innerText = distChartShowingTech ? '👨‍💻 Jobs by Technician' : '🏭 Jobs by Workshop';
+        renderDistChart(currentFilteredJobs);
+    }
+
+    function ageBadgeColor(days) {
+        if (days >= 30) return '#b91c1c';
+        if (days >= 14) return '#ea580c';
+        return '#64748b';
+    }
+
+    function renderOldestJobs(jobs) {
+        const container = document.getElementById('oldestJobsList');
+        const openJobs = jobs.filter(j => !j.isHandedOver && j.status !== 'Completed' && j.status !== 'Returned');
+        const withAge = openJobs.map(j => {
+            const d = parseAnyDate(j.createdTime);
+            const days = d ? Math.floor((Date.now() - d.getTime()) / 86400000) : null;
+            return { job: j, days };
+        }).filter(x => x.days !== null).sort((a, b) => b.days - a.days).slice(0, 6);
+
+        if (withAge.length === 0) { container.innerHTML = '<div class="chart-empty">No open jobs in the current filter.</div>'; return; }
+        container.innerHTML = withAge.map(({ job, days }) => `
+            <div class="bar-row" style="cursor:pointer;" onclick="openDetailModal(${job.jobNum})">
+                <div class="bar-label" title="#${job.jobNum} — ${job.customer || ''}">#${job.jobNum} — ${job.customer || 'N/A'}</div>
+                <div class="bar-track"><div class="bar-fill" style="width:100%; background:${ageBadgeColor(days)};">${days}d</div></div>
+            </div>
+        `).join('');
+    }
+
+    function resetAllFilters() {
+        document.getElementById('fJobNum').value = '';
+        document.getElementById('fQuickSearch').value = '';
+        document.getElementById('fItemType').value = 'ALL';
+        document.getElementById('fWorkshop').value = 'ALL';
+        document.getElementById('fTech').value = 'ALL';
+        document.getElementById('fStatus').value = 'ALL';
+        document.getElementById('fHandoverView').value = 'HIDE';
+        document.getElementById('fSortOrder').value = 'createdDesc';
+        document.getElementById('fDateFrom').value = '';
+        document.getElementById('fDateTo').value = '';
+        document.getElementById('fHandoverDateFrom').value = '';
+        document.getElementById('fHandoverDateTo').value = '';
+        renderTable();
+    }
+
+    function renderTable() {
+        const sJob = document.getElementById('fJobNum').value.trim();
+        const sQuick = document.getElementById('fQuickSearch').value.trim().toLowerCase();
+        const sItemType = document.getElementById('fItemType').value;
+        const sWork = document.getElementById('fWorkshop').value;
+        const sTech = document.getElementById('fTech').value;
+        const sStat = document.getElementById('fStatus').value;
+        const sHandover = document.getElementById('fHandoverView').value;
+        const sSort = document.getElementById('fSortOrder').value;
+        const sDateFrom = document.getElementById('fDateFrom').value;
+        const sDateTo = document.getElementById('fDateTo').value;
+        const sHandoverDateFrom = document.getElementById('fHandoverDateFrom').value;
+        const sHandoverDateTo = document.getElementById('fHandoverDateTo').value;
+
+        document.getElementById('dateActiveBadge').style.display = (sDateFrom || sDateTo) ? 'inline-block' : 'none';
+        document.getElementById('handoverDateActiveBadge').style.display = (sHandoverDateFrom || sHandoverDateTo) ? 'inline-block' : 'none';
+
+        const fromMs = sDateFrom ? new Date(sDateFrom).getTime() : null;
+        const toMs = sDateTo ? new Date(sDateTo + 'T23:59:59').getTime() : null;
+        const hFromMs = sHandoverDateFrom ? new Date(sHandoverDateFrom).getTime() : null;
+        const hToMs = sHandoverDateTo ? new Date(sHandoverDateTo + 'T23:59:59').getTime() : null;
+        const wantsHandoverDateFilter = (hFromMs !== null || hToMs !== null);
+
+        let matching = [];
+        jobsCacheArray.forEach(job => {
+            if (sJob && !job.jobNum.toString().includes(sJob)) return;
+            if (sQuick) {
+                const hay = [job.mobile ? job.mobile.toString() : '', job.customer || '', job.serial || '', job.model || '', job.fault || ''].join(' | ').toLowerCase();
+                if (!hay.includes(sQuick)) return;
+            }
+            if (sItemType !== 'ALL' && job.itemType !== sItemType) return;
+            if (sWork !== 'ALL' && !(sWork === 'UNASSIGNED' ? !(job.workshop && job.workshop.trim()) : job.workshop === sWork)) return;
+            if (sTech !== 'ALL' && !(sTech === 'UNASSIGNED' ? !(job.tech && job.tech.trim()) : job.tech === sTech)) return;
+            if (sStat !== 'ALL' && job.status !== sStat) return;
+            if (sHandover === 'HIDE' && job.isHandedOver && !wantsHandoverDateFilter) return;
+            if (sHandover === 'SHOW' && !job.isHandedOver) return;
+
+            if (fromMs !== null || toMs !== null) {
+                const jd = parseAnyDate(job.createdTime);
+                if (!jd) return;
+                const t = jd.getTime();
+                if (fromMs !== null && t < fromMs) return;
+                if (toMs !== null && t > toMs) return;
+            }
+            if (wantsHandoverDateFilter) {
+                if (!job.isHandedOver || !job.handoverTime) return;
+                const hd = parseAnyDate(job.handoverTime);
+                if (!hd) return;
+                const t = hd.getTime();
+                if (hFromMs !== null && t < hFromMs) return;
+                if (hToMs !== null && t > hToMs) return;
+            }
+            matching.push(job);
+        });
+
+        function toTime(val) { const d = parseAnyDate(val); return d ? d.getTime() : NaN; }
+        matching.sort((a, b) => {
+            switch (sSort) {
+                case 'createdAsc': { const ta = toTime(a.createdTime), tb = toTime(b.createdTime); return (isNaN(ta) ? 0 : ta) - (isNaN(tb) ? 0 : tb); }
+                case 'updatedDesc': { const ta = toTime(a.updatedTime), tb = toTime(b.updatedTime); return (isNaN(tb) ? -Infinity : tb) - (isNaN(ta) ? -Infinity : ta); }
+                case 'updatedAsc': { const ta = toTime(a.updatedTime), tb = toTime(b.updatedTime); return (isNaN(ta) ? Infinity : ta) - (isNaN(tb) ? Infinity : tb); }
+                case 'jobDesc': return Number(b.jobNum) - Number(a.jobNum);
+                case 'jobAsc': return Number(a.jobNum) - Number(b.jobNum);
+                case 'handoverDesc': { const ta = toTime(a.handoverTime), tb = toTime(b.handoverTime); return (isNaN(tb) ? -Infinity : tb) - (isNaN(ta) ? -Infinity : ta); }
+                case 'handoverAsc': { const ta = toTime(a.handoverTime), tb = toTime(b.handoverTime); return (isNaN(ta) ? Infinity : ta) - (isNaN(tb) ? Infinity : tb); }
+                case 'createdDesc':
+                default: { const ta = toTime(a.createdTime), tb = toTime(b.createdTime); return (isNaN(tb) ? 0 : tb) - (isNaN(ta) ? 0 : ta); }
+            }
+        });
+
+        const container = document.getElementById('pipelineRowsContainer');
+        if (matching.length === 0) {
+            container.innerHTML = '<tr><td colspan="4" class="loading-text">No jobs match the current filters.</td></tr>';
+        } else {
+            container.innerHTML = matching.map(job => {
+                const handoverLabel = job.isHandedOver
+                    ? `<br><span style="font-size:10px; color:#059669;">📦 Handed Over${job.handoverTime ? ': ' + formatFriendlyDate(job.handoverTime) : ''}</span>`
+                    : '';
+                return `
+                <tr class="job-row-view" onclick="openDetailModal(${job.jobNum})" title="Click to view full job details">
+                    <td>
+                        <strong>#${job.jobNum}</strong><br>
+                        <span style="font-size:11px; color:#64748b;">${job.createdTime || ''}</span><br>
+                        <strong>${job.itemType || ''}</strong> (${job.customer || 'N/A'})<br>
+                        <span style="font-size:11px; color:#059669; font-weight:bold;">🖥️ ${job.model || 'N/A'}</span><br>
+                        <span style="font-size:11px; color:#ef476f; font-weight:700;">⚠️ ${job.fault || 'Not Specified'}</span>
+                    </td>
+                    <td>🏭 ${job.workshop || 'Unassigned'}</td>
+                    <td>👨‍💻 ${job.tech || 'Unassigned'}</td>
+                    <td>
+                        <span class="status-tag status-${job.status.replace(/\s+/g, '')}">${job.status}</span>
+                        ${handoverLabel}
+                    </td>
+                </tr>`;
+            }).join('');
+        }
+
+        document.getElementById('resultCount').innerText = `Showing ${matching.length} of ${jobsCacheArray.length} total jobs`;
+        document.getElementById('queueTabCount').innerText = matching.length;
+
+        calculateCounters(matching);
+        renderDistChart(matching);
+        renderOldestJobs(matching);
+        currentFilteredJobs = matching;
+    }
+
+    // ── Read-only detail modal ──
+    function openDetailModal(jobNum) {
+        const job = jobsCacheArray.find(j => j.jobNum == jobNum);
+        if (!job) return;
+        document.getElementById('dJobNum').innerText = job.jobNum;
+        document.getElementById('dStatus').innerHTML = `<span class="status-tag status-${job.status.replace(/\s+/g, '')}">${job.status}</span>`;
+        document.getElementById('dCreated').innerText = job.createdTime || '—';
+        document.getElementById('dCustomer').innerText = job.customer || '—';
+        document.getElementById('dMobile').innerText = job.mobile || '—';
+        document.getElementById('dItemType').innerText = job.itemType || '—';
+        document.getElementById('dModel').innerText = job.model || '—';
+        document.getElementById('dSerial').innerText = job.serial || '—';
+        document.getElementById('dWorkshop').innerText = job.workshop || 'Unassigned';
+        document.getElementById('dTech').innerText = job.tech || 'Unassigned';
+        document.getElementById('dUpdated').innerText = job.updatedTime ? formatFriendlyDate(job.updatedTime) : '—';
+        document.getElementById('dEstimate').innerText = job.estimatePrice ? `Rs. ${job.estimatePrice}` : '—';
+        document.getElementById('dTotal').innerText = job.totalPrice ? `Rs. ${job.totalPrice}` : '—';
+        document.getElementById('dFault').innerText = job.fault || 'Not specified';
+        document.getElementById('dHandover').innerText = job.isHandedOver
+            ? `Handed over${job.handoverTime ? ' on ' + formatFriendlyDate(job.handoverTime) : ''}`
+            : 'Not handed over yet';
+
+        document.getElementById('detailModalOverlay').classList.add('show');
+        loadHistory(job.jobNum);
+    }
+    function closeDetailModal() {
+        document.getElementById('detailModalOverlay').classList.remove('show');
+    }
+
+    function loadHistory(jobNum) {
+        const box = document.getElementById('dHistory');
+        box.innerHTML = '<div class="history-empty">Loading…</div>';
+        fetch(`${WEB_APP_URL}?action=getJobHistory&jobNum=${jobNum}`).then(res => res.json()).then(data => {
+            if (!data.success || !data.history || data.history.length === 0) {
+                box.innerHTML = '<div class="history-empty">No activity logs for this job yet.</div>';
+                return;
+            }
+            const raw = data.history.slice();
+            const allParseable = raw.every(log => !isNaN(new Date(log.timestamp).getTime()));
+            const ordered = allParseable ? raw.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp)) : raw.reverse();
+            box.innerHTML = ordered.map(log => `
+                <div class="history-item">
+                    <span class="h-status">${log.status || ''}</span>
+                    <div>
+                        <div><strong>${log.operator || 'System'}</strong> <span style="color:#94a3b8;">— ${log.timestamp || ''}</span></div>
+                        ${log.notes ? `<div style="color:#475569; margin-top:2px;">${log.notes}</div>` : ''}
+                    </div>
+                </div>
+            `).join('');
+        }).catch(() => {
+            box.innerHTML = '<div class="history-empty">Could not load activity logs.</div>';
+        });
+    }
+
+    document.addEventListener('DOMContentLoaded', () => { switchTab('dashboard'); fetchJobs(); });
+</script>
+</body>
+</html>
