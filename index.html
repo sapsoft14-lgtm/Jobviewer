@@ -90,105 +90,6 @@
     .toast-stack { position: fixed; bottom: 20px; right: 20px; z-index: 9999; display: flex; flex-direction: column-reverse; gap: 10px; max-width: 320px; }
     .toast-item { background: #1e293b; color: white; padding: 12px 14px; border-radius: 8px; font-size: 13px; font-weight: 600; box-shadow: 0 6px 18px rgba(0,0,0,0.18); border-left: 4px solid #64748b; }
     .toast-item.toast-error { border-left-color: #ef476f; }
-
-
-    /* ── Mobile-first tab navigation ── */
-    .app-tabs { display:grid; grid-template-columns:1fr 1fr; gap:8px; margin:0 0 16px; position:sticky; top:0; z-index:1000; background:#f1f5f9; padding:4px 0 8px; }
-    .app-tab { border:1px solid #dbe3ef; background:#fff; color:#475569; border-radius:10px; padding:11px 14px; font-size:13px; font-weight:800; cursor:pointer; transition:.18s ease; box-shadow:0 2px 7px rgba(15,23,42,.04); }
-    .app-tab.active { background:#1e3a8a; color:#fff; border-color:#1e3a8a; box-shadow:0 5px 14px rgba(30,58,138,.18); }
-    .tab-panel { display:none; }
-    .tab-panel.active { display:block; }
-    .section-caption { font-size:12px; color:#64748b; margin:-10px 0 14px; }
-    .mobile-only-note { display:none; }
-
-    /* More responsive controls */
-    .controls-bar { grid-template-columns:repeat(12, minmax(0, 1fr)); }
-    .controls-bar > input#fJobNum { grid-column:span 3; }
-    .controls-bar > div { grid-column:span 5 !important; }
-    .controls-bar > select { grid-column:span 2; }
-    .date-filter-bar { display:grid; grid-template-columns:auto minmax(120px,1fr) auto minmax(120px,1fr) auto auto minmax(120px,1fr) auto minmax(120px,1fr) auto; }
-    .date-filter-bar .btn-reset-filters { margin-left:0; }
-
-    /* Compact job queue on phones */
-    @media (max-width: 768px) {
-        body { padding:10px; }
-        .wrap { max-width:none; }
-        .top-bar { gap:10px; margin-bottom:8px; }
-        .top-bar h1 { font-size:16px; line-height:1.25; }
-        .view-only-badge { font-size:9px; padding:3px 7px; }
-        .sync-row { width:100%; justify-content:space-between; }
-        .sync-row .btn-sync { min-width:118px; }
-        .app-tabs { margin-bottom:10px; }
-        .app-tab { padding:10px 8px; font-size:12px; }
-
-        .card { padding:13px; border-radius:10px; margin-bottom:12px; }
-        h2 { font-size:14px; }
-        .metrics-grid { grid-template-columns:repeat(2, minmax(0,1fr)); gap:7px; margin-bottom:10px; }
-        .metric-card { padding:9px 7px; border-radius:8px; }
-        .metric-title { font-size:9px; line-height:1.25; min-height:23px; display:flex; align-items:center; justify-content:center; }
-        .metric-value { font-size:18px; }
-
-        .dashboard-panels-row { gap:10px; }
-        .chart-header { align-items:flex-start; }
-        .chart-toggle-btn { font-size:10px; padding:5px 8px; }
-        .bar-row { gap:6px; margin-bottom:7px; }
-        .bar-label { width:108px; font-size:10px; }
-        .bar-track { height:15px; }
-        .bar-fill { font-size:9px; }
-
-        .controls-bar { grid-template-columns:1fr 1fr; gap:8px; padding:10px; border-radius:10px 10px 0 0; }
-        .controls-bar > input#fJobNum,
-        .controls-bar > div,
-        .controls-bar > select { grid-column:span 2 !important; }
-        .controls-bar > input#fJobNum,
-        .controls-bar > div { grid-column:span 2 !important; }
-        .controls-bar select { min-height:42px; }
-        .controls-bar input { min-height:42px; }
-
-        .date-filter-bar { grid-template-columns:auto 1fr auto 1fr; gap:7px; padding:10px; font-size:11px; border-radius:0 0 10px 10px; }
-        .date-filter-bar label { white-space:nowrap; }
-        .date-filter-bar label:nth-of-type(2) { grid-column:1 / -1; margin-left:0 !important; padding-top:3px; }
-        .date-filter-bar .date-active-badge,
-        .date-filter-bar #handoverDateActiveBadge { grid-column:1 / -1; }
-        .date-filter-bar .btn-reset-filters { grid-column:1 / -1; width:100%; }
-        .date-filter-bar span[style*="font-weight:bold"] { text-align:center; }
-
-        .table-responsive-wrapper { border-radius:10px; border-top:1px solid #e2e8f0; margin-top:10px; overflow:visible; background:transparent; }
-        .pipeline-table { min-width:0; width:100%; border-collapse:separate; border-spacing:0 10px; font-size:12px; }
-        .pipeline-table thead { display:none; }
-        .pipeline-table tbody, .pipeline-table tr { display:block; width:100%; }
-        .pipeline-table tr.job-row-view { background:#fff; border:1px solid #e2e8f0; border-radius:12px; box-shadow:0 3px 10px rgba(15,23,42,.05); overflow:hidden; margin-bottom:10px; }
-        .pipeline-table tr.job-row-view:hover { background:#fff; }
-        .pipeline-table td { display:block; padding:9px 12px 9px 78px; border-bottom:1px solid #f1f5f9; min-height:18px; position:relative; box-sizing:border-box; line-height:1.35; }
-        .pipeline-table td:last-child { border-bottom:none; }
-        .pipeline-table td::before { position:absolute; left:12px; top:9px; width:58px; font-size:9px; color:#94a3b8; font-weight:800; text-transform:uppercase; letter-spacing:.03em; }
-        .pipeline-table td:nth-child(1)::before { content:'Job'; }
-        .pipeline-table td:nth-child(2)::before { content:'Workshop'; }
-        .pipeline-table td:nth-child(3)::before { content:'Technician'; }
-        .pipeline-table td:nth-child(4)::before { content:'Status'; }
-        .pipeline-table td:nth-child(1) { padding-top:11px; }
-        .pipeline-table td:nth-child(4) { padding-bottom:11px; }
-        .pipeline-table td:nth-child(4) .status-tag { max-width:100%; white-space:normal; line-height:1.2; text-align:center; padding:5px 10px; }
-        .result-count { padding:8px 2px; font-size:11px; }
-        .mobile-only-note { display:block; color:#94a3b8; font-size:10px; margin-top:6px; }
-
-        .modal-overlay { padding:8px; }
-        .modal-box { max-height:94vh; padding:15px; border-radius:12px; }
-        .detail-grid { grid-template-columns:1fr; gap:8px; }
-        .detail-full { grid-column:auto; }
-        .history-item { align-items:flex-start; }
-        .toast-stack { left:10px; right:10px; bottom:10px; max-width:none; }
-    }
-
-    @media (min-width:769px) and (max-width:1100px) {
-        .controls-bar { grid-template-columns:repeat(6, minmax(0,1fr)); }
-        .controls-bar > input#fJobNum { grid-column:span 2; }
-        .controls-bar > div { grid-column:span 4 !important; }
-        .controls-bar > select { grid-column:span 2; }
-        .date-filter-bar { grid-template-columns:auto 1fr auto 1fr auto; }
-        .date-filter-bar label:nth-of-type(2) { grid-column:1; }
-    }
-
 </style>
 </head>
 <body>
@@ -202,12 +103,6 @@
         </div>
     </div>
 
-    <div class="app-tabs" role="tablist" aria-label="Main sections">
-        <button id="tabDashboard" class="app-tab active" type="button" onclick="switchTab('dashboard')">📊 Dashboard</button>
-        <button id="tabQueue" class="app-tab" type="button" onclick="switchTab('queue')">📋 Job Queue <span id="queueTabCount">0</span></button>
-    </div>
-
-    <section id="dashboardPanel" class="tab-panel active">
     <!-- Dashboard metrics -->
     <div class="metrics-grid">
         <div class="metric-card" style="background:#1e3a8a;"><div class="metric-title">Total</div><div id="mTotal" class="metric-value">0</div></div>
@@ -237,10 +132,6 @@
         </div>
     </div>
 
-    <div class="mobile-only-note">Tip: Tap any job card to open the full read-only job details.</div>
-    </section>
-
-    <section id="queuePanel" class="tab-panel">
     <!-- Filters -->
     <div class="controls-bar" style="margin-top:18px;">
         <input type="text" id="fJobNum" placeholder="🔎 Search Job # (exact/partial)" oninput="renderTable()">
@@ -332,7 +223,6 @@
         </table>
         <div class="result-count" id="resultCount"></div>
     </div>
-    </section>
 
 </div>
 
@@ -367,7 +257,7 @@
 
 <script>
     // ── Backend endpoint (read-only GET calls only — this page never writes data) ──
-    const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbytDEJQNBfn1shoA5Ig5y8I1Vc4WzjuY6C451Pdte-MGZj93CcpAjUwyI050ss6cbs1/exec";
+    const WEB_APP_URL = "https://zrfdavacsndjspyhhfej.supabase.co/functions/v1/shop-api";
 
     let jobsCacheArray = [];
     let currentFilteredJobs = [];
@@ -418,17 +308,6 @@
         const d = parseAnyDate(raw);
         if (!d) return raw ? raw.toString() : '';
         return d.toLocaleString('en-GB', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit', hour12: true });
-    }
-
-    function switchTab(tab) {
-        const isDashboard = tab === 'dashboard';
-        document.getElementById('dashboardPanel').classList.toggle('active', isDashboard);
-        document.getElementById('queuePanel').classList.toggle('active', !isDashboard);
-        document.getElementById('tabDashboard').classList.toggle('active', isDashboard);
-        document.getElementById('tabQueue').classList.toggle('active', !isDashboard);
-        document.getElementById('tabDashboard').setAttribute('aria-selected', isDashboard ? 'true' : 'false');
-        document.getElementById('tabQueue').setAttribute('aria-selected', isDashboard ? 'false' : 'true');
-        window.scrollTo({ top: 0, behavior: 'smooth' });
     }
 
     // ── Fetch pipeline data (GET only — no writes possible from this page) ──
@@ -634,7 +513,6 @@
         }
 
         document.getElementById('resultCount').innerText = `Showing ${matching.length} of ${jobsCacheArray.length} total jobs`;
-        document.getElementById('queueTabCount').innerText = matching.length;
 
         calculateCounters(matching);
         renderDistChart(matching);
@@ -696,7 +574,7 @@
         });
     }
 
-    document.addEventListener('DOMContentLoaded', () => { switchTab('dashboard'); fetchJobs(); });
+    document.addEventListener('DOMContentLoaded', fetchJobs);
 </script>
 </body>
 </html>
